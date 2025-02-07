@@ -1,7 +1,7 @@
 export declare class AppService {
     private data;
     constructor();
-    addData(data: String): void;
-    getData(): String[];
+    addData(data: string): void;
+    getData(): string[];
     getHello(): string;
 }

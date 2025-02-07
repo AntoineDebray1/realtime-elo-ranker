@@ -3,6 +3,6 @@ export declare class AppController {
     private readonly appService;
     constructor(appService: AppService);
     getHello(): string;
-    getData(): String[];
-    addData(data: String): void;
+    getData(): string[];
+    addData(data: string): void;
 }

@@ -16,10 +16,7 @@ export class AppController {
   }
 
   @Post('data')
-  addData(@Body() data: String) {
+  addData(@Body() data: string) {
     return this.appService.addData(data);
   }
-
-  
 }
-
