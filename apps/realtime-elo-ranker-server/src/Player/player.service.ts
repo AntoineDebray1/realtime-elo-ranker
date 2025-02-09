@@ -7,6 +7,9 @@ import { EventEmitterService } from '../event-emitter/event-emitter.service';
 
 @Injectable()
 export class PlayerService {
+  findOne(id: string): Promise<Player | undefined> {
+    return this.players.findOne({ where: { id } }).then(player => player ?? undefined);
+  }
   constructor(
     @InjectRepository(Player)
     private readonly players: Repository<Player>,
@@ -37,7 +40,11 @@ export class PlayerService {
             HttpStatus.CONFLICT,
           );
         }
-
+        if (createPlayerDTO.rank !== undefined) {
+          return createPlayerDTO.rank;
+        }
+        
+        // Sinon, calculer la moyenne des rangs existants
         return this.calculateAverageRank();
       })
       .then((averageRank) => {
@@ -70,4 +77,6 @@ export class PlayerService {
   findAll(): Promise<Player[]> {
     return this.players.find();
   }
+
+  
 }

@@ -8,6 +8,7 @@ export declare class PlayersController {
     private readonly eventEmitter;
     constructor(playerService: PlayerService, eventEmitter: EventEmitterService);
     setPlayerName(createPlayerDTO: CreatePlayerDTO, res: Response): Promise<Response<any, Record<string, any>>>;
+    getPlayer(id: string, res: Response): Promise<Response<any, Record<string, any>>>;
     getRankingEvents(): import("rxjs").Observable<{
         data: {
             type: string;

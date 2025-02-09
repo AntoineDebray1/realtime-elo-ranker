@@ -39,6 +39,24 @@ let PlayersController = class PlayersController {
             });
         }
     }
+    getPlayer(id, res) {
+        return this.playerService.findOne(id)
+            .then((player) => {
+            if (!player) {
+                throw new common_1.HttpException('Player not found', common_1.HttpStatus.NOT_FOUND);
+            }
+            return res.status(200).json(player);
+        })
+            .catch((error) => {
+            if (error instanceof common_1.HttpException) {
+                return res.status(error.getStatus()).json(error.getResponse());
+            }
+            return res.status(common_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+                code: 500,
+                message: 'Internal server error',
+            });
+        });
+    }
     getRankingEvents() {
         return (0, rxjs_1.fromEvent)(this.eventEmitter.getEventEmitter(), 'ranking.update').pipe((0, operators_1.map)((player) => ({
             data: { type: 'RankingUpdate', player },
@@ -54,6 +72,14 @@ __decorate([
     __metadata("design:paramtypes", [create_player_dto_1.CreatePlayerDTO, Object]),
     __metadata("design:returntype", Promise)
 ], PlayersController.prototype, "setPlayerName", null);
+__decorate([
+    (0, common_1.Get)('/api/player/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], PlayersController.prototype, "getPlayer", null);
 __decorate([
     (0, common_1.Sse)('api/ranking/events'),
     __metadata("design:type", Function),

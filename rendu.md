@@ -153,6 +153,32 @@ TypeOrmModule.forRoot({
     }),
 ````
 
+## Tests
+La réalisation de tests E2E (End-to-End) permet de vérifier le bon fonctionnement des routes et des services de l'application en simulant des interactions réelles avec l'API. Ces tests couvrent l'ensemble du flux de travail, depuis l'envoi de requêtes HTTP jusqu'à la vérification des réponses, en passant par l'interaction avec la base de données.
+
+Exemple de test pour la création d'un joueur
+Le test suivant vérifie que l'API permet de créer un joueur avec un identifiant et un rang spécifiés. Il envoie une requête POST à l'endpoint /api/player et vérifie que la réponse contient les informations correctes.
+
+```ts
+it('/api/player (POST) - Should create a player', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/player')
+      .send({ id: 'test1', rank: 1500 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe('test1');
+    expect(res.body.rank).toBe(1500);
+  });
+```
+
+### Pour lancer les tests
+Pour exécuter les tests E2E, utilisez la commande suivante :
+
+```bash
+pnpm test:e2e
+```
+Cette commande exécutera tous les tests E2E définis dans votre projet, en vérifiant que les différentes routes et services fonctionnent comme prévu.
+
 
 ## Lancez le projet
 
@@ -206,6 +232,7 @@ pnpm run apps:client:dev
 ```bash
 pnpm run docs:swagger:start
 ```
+
 
 ## Conclusion  
 

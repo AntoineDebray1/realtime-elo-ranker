@@ -19,6 +19,9 @@ const typeorm_2 = require("typeorm");
 const player_entity_1 = require("../entities/player.entity");
 const event_emitter_service_1 = require("../event-emitter/event-emitter.service");
 let PlayerService = class PlayerService {
+    findOne(id) {
+        return this.players.findOne({ where: { id } }).then(player => player ?? undefined);
+    }
     constructor(players, eventEmitterService) {
         this.players = players;
         this.eventEmitterService = eventEmitterService;
@@ -32,6 +35,9 @@ let PlayerService = class PlayerService {
             .then((existingPlayer) => {
             if (existingPlayer) {
                 throw new common_1.HttpException({ code: 409, message: 'Player already exists' }, common_1.HttpStatus.CONFLICT);
+            }
+            if (createPlayerDTO.rank !== undefined) {
+                return createPlayerDTO.rank;
             }
             return this.calculateAverageRank();
         })

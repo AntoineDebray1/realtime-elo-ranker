@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Res, Sse, HttpException, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Post, Res, Sse, HttpException, HttpStatus, Get, Param } from '@nestjs/common';
 import { PlayerService } from './player.service';
 import { Response } from 'express';
 import { CreatePlayerDTO } from './dto/create-player.dto';
@@ -28,6 +28,26 @@ export class PlayersController {
         message: 'Internal server error',
       });
     }
+  }
+
+  @Get('/api/player/:id')
+  getPlayer(@Param('id') id: string, @Res() res: Response) {
+    return this.playerService.findOne(id)
+      .then((player: Player | undefined) => {
+        if (!player) {
+          throw new HttpException('Player not found', HttpStatus.NOT_FOUND);
+        }
+        return res.status(200).json(player);
+      })
+      .catch((error: any) => {
+        if (error instanceof HttpException) {
+          return res.status(error.getStatus()).json(error.getResponse());
+        }
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          code: 500,
+          message: 'Internal server error',
+        });
+      });
   }
 
   @Sse('api/ranking/events')
