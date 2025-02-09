@@ -1,4 +1,4 @@
-import { Controller, Get, Res, Sse } from '@nestjs/common';
+import { Controller, Get, Res, Sse, HttpException, HttpStatus } from '@nestjs/common';
 import { RankingService } from './ranking.service';
 import { Response } from 'express';
 import { EventEmitterService } from '../event-emitter/event-emitter.service';
@@ -14,34 +14,35 @@ export class RankingController {
   ) {}
 
   @Get('/api/ranking')
-  async getRanking(@Res() res: Response) {
-    try {
-      const players = await this.rankingService.getRanking();
-      return res.status(200).json(players);
-    } catch {
-      return res.status(500).json({
-        code: 0,
-        message: 'Failed to get ranking',
+  getRanking(@Res() res: Response) {
+    this.rankingService.getRanking()
+      .then((players) => res.status(200).json(players))
+      .catch((error) => {
+        if (error instanceof HttpException) {
+          return res.status(error.getStatus()).json(error.getResponse());
+        }
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          code: 500,
+          message: 'Failed to get ranking',
+        });
       });
-    }
   }
 
   @Sse('/api/ranking/events')
   getRankingUpdates() {
-    console.log('SSE - En attente des mises à jour du classement...');
     return fromEvent(
       this.eventEmitterService.getEventEmitter(),
       'ranking.update',
     ).pipe(
-      map((player: Player) => {
-        console.log('SSE - Événement reçu :', player);
-        return <MessageEvent>{
-          data: {
-            type: 'RankingUpdate',
-            player: player,
+      map((player: Player) => ({
+        data: {
+          type: 'RankingUpdate',
+          player: {
+            id: player.id,
+            rank: player.rank,
           },
-        };
-      }),
+        },
+      })),
     );
   }
 }

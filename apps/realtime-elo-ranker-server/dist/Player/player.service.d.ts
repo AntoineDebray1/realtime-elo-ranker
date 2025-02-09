@@ -7,5 +7,6 @@ export declare class PlayerService {
     private readonly eventEmitterService;
     constructor(players: Repository<Player>, eventEmitterService: EventEmitterService);
     setPlayerName(createPlayerDTO: CreatePlayerDTO): Promise<Player>;
+    calculateAverageRank(): Promise<number>;
     findAll(): Promise<Player[]>;
 }

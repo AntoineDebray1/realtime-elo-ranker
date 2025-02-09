@@ -5,6 +5,14 @@ export declare class RankingController {
     private readonly rankingService;
     private readonly eventEmitterService;
     constructor(rankingService: RankingService, eventEmitterService: EventEmitterService);
-    getRanking(res: Response): Promise<Response<any, Record<string, any>>>;
-    getRankingUpdates(): import("rxjs").Observable<MessageEvent<any>>;
+    getRanking(res: Response): void;
+    getRankingUpdates(): import("rxjs").Observable<{
+        data: {
+            type: string;
+            player: {
+                id: string;
+                rank: number;
+            };
+        };
+    }>;
 }

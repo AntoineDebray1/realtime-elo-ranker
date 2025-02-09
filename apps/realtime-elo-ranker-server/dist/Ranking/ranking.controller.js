@@ -23,29 +23,29 @@ let RankingController = class RankingController {
         this.rankingService = rankingService;
         this.eventEmitterService = eventEmitterService;
     }
-    async getRanking(res) {
-        try {
-            const players = await this.rankingService.getRanking();
-            return res.status(200).json(players);
-        }
-        catch {
-            return res.status(500).json({
-                code: 0,
+    getRanking(res) {
+        this.rankingService.getRanking()
+            .then((players) => res.status(200).json(players))
+            .catch((error) => {
+            if (error instanceof common_1.HttpException) {
+                return res.status(error.getStatus()).json(error.getResponse());
+            }
+            return res.status(common_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+                code: 500,
                 message: 'Failed to get ranking',
             });
-        }
+        });
     }
     getRankingUpdates() {
-        console.log('SSE - En attente des mises à jour du classement...');
-        return (0, rxjs_1.fromEvent)(this.eventEmitterService.getEventEmitter(), 'ranking.update').pipe((0, operators_1.map)((player) => {
-            console.log('SSE - Événement reçu :', player);
-            return {
-                data: {
-                    type: 'RankingUpdate',
-                    player: player,
+        return (0, rxjs_1.fromEvent)(this.eventEmitterService.getEventEmitter(), 'ranking.update').pipe((0, operators_1.map)((player) => ({
+            data: {
+                type: 'RankingUpdate',
+                player: {
+                    id: player.id,
+                    rank: player.rank,
                 },
-            };
-        }));
+            },
+        })));
     }
 };
 exports.RankingController = RankingController;
@@ -54,7 +54,7 @@ __decorate([
     __param(0, (0, common_1.Res)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], RankingController.prototype, "getRanking", null);
 __decorate([
     (0, common_1.Sse)('/api/ranking/events'),

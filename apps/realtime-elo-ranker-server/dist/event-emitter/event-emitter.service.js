@@ -13,8 +13,8 @@ exports.EventEmitterService = void 0;
 const common_1 = require("@nestjs/common");
 const eventemitter2_1 = require("eventemitter2");
 let EventEmitterService = class EventEmitterService {
-    constructor() {
-        this.eventEmitter = new eventemitter2_1.EventEmitter2();
+    constructor(eventEmitter) {
+        this.eventEmitter = eventEmitter;
     }
     getEventEmitter() {
         return this.eventEmitter;
@@ -29,6 +29,6 @@ let EventEmitterService = class EventEmitterService {
 exports.EventEmitterService = EventEmitterService;
 exports.EventEmitterService = EventEmitterService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [])
+    __metadata("design:paramtypes", [eventemitter2_1.EventEmitter2])
 ], EventEmitterService);
 //# sourceMappingURL=event-emitter.service.js.map

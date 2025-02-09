@@ -20,38 +20,29 @@ const rxjs_1 = require("rxjs");
 const event_emitter_service_1 = require("../event-emitter/event-emitter.service");
 const operators_1 = require("rxjs/operators");
 let PlayersController = class PlayersController {
-    constructor(PlayersService, eventEmitter) {
-        this.PlayersService = PlayersService;
+    constructor(playerService, eventEmitter) {
+        this.playerService = playerService;
         this.eventEmitter = eventEmitter;
     }
-    setPlayerName(createPlayerDTO, res) {
-        let result;
+    async setPlayerName(createPlayerDTO, res) {
         try {
-            result = this.PlayersService.setPlayerName(createPlayerDTO);
+            const result = await this.playerService.setPlayerName(createPlayerDTO);
+            return res.status(200).json(result);
         }
-        catch {
-            if (createPlayerDTO.id === '') {
-                return res.status(400).json({
-                    code: 0,
-                    message: 'No id found',
-                });
+        catch (error) {
+            if (error instanceof common_1.HttpException) {
+                return res.status(error.getStatus()).json(error.getResponse());
             }
-            return res.status(409).json({
-                code: 0,
-                message: 'Player already exists',
+            return res.status(common_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+                code: 500,
+                message: 'Internal server error',
             });
         }
-        return res.status(201).json(result);
     }
     getRankingEvents() {
-        return (0, rxjs_1.fromEvent)(this.eventEmitter.getEventEmitter(), 'rankingUpdate').pipe((0, operators_1.map)((player) => {
-            return {
-                data: {
-                    type: 'RankingUpdate',
-                    player: player,
-                },
-            };
-        }));
+        return (0, rxjs_1.fromEvent)(this.eventEmitter.getEventEmitter(), 'ranking.update').pipe((0, operators_1.map)((player) => ({
+            data: { type: 'RankingUpdate', player },
+        })));
     }
 };
 exports.PlayersController = PlayersController;
@@ -61,7 +52,7 @@ __decorate([
     __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_player_dto_1.CreatePlayerDTO, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], PlayersController.prototype, "setPlayerName", null);
 __decorate([
     (0, common_1.Sse)('api/ranking/events'),

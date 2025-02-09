@@ -16,21 +16,31 @@ exports.MatchsController = void 0;
 const common_1 = require("@nestjs/common");
 const match_service_1 = require("./match.service");
 const match_entity_1 = require("../entities/match.entity");
+const event_emitter_service_1 = require("../event-emitter/event-emitter.service");
+const rxjs_1 = require("rxjs");
+const operators_1 = require("rxjs/operators");
 let MatchsController = class MatchsController {
-    constructor(MatchService) {
-        this.MatchService = MatchService;
+    constructor(matchService, eventEmitter) {
+        this.matchService = matchService;
+        this.eventEmitter = eventEmitter;
     }
     setMatch(match, res) {
-        this.MatchService.setMatch(match)
-            .then((result) => {
-            return res.status(201).json(result);
-        })
-            .catch(() => {
-            return res.status(422).json({
-                code: 0,
-                message: 'No players found',
+        this.matchService.setMatch(match)
+            .then((result) => res.status(200).json(result))
+            .catch((error) => {
+            if (error instanceof common_1.HttpException) {
+                return res.status(error.getStatus()).json(error.getResponse());
+            }
+            return res.status(common_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
+                code: 500,
+                message: 'Internal server error',
             });
         });
+    }
+    getMatchEvents() {
+        return (0, rxjs_1.fromEvent)(this.eventEmitter.getEventEmitter(), 'match.update').pipe((0, operators_1.map)((match) => ({
+            data: { type: 'MatchUpdate', match },
+        })));
     }
 };
 exports.MatchsController = MatchsController;
@@ -42,8 +52,15 @@ __decorate([
     __metadata("design:paramtypes", [match_entity_1.Match, Object]),
     __metadata("design:returntype", void 0)
 ], MatchsController.prototype, "setMatch", null);
+__decorate([
+    (0, common_1.Sse)('api/ranking/events'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], MatchsController.prototype, "getMatchEvents", null);
 exports.MatchsController = MatchsController = __decorate([
     (0, common_1.Controller)(),
-    __metadata("design:paramtypes", [match_service_1.MatchService])
+    __metadata("design:paramtypes", [match_service_1.MatchService,
+        event_emitter_service_1.EventEmitterService])
 ], MatchsController);
 //# sourceMappingURL=match.controller.js.map

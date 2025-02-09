@@ -23,18 +23,21 @@ let RankingService = class RankingService {
         this.playerRepository = playerRepository;
         this.eventEmitterService = eventEmitterService;
     }
-    async getRanking() {
+    getRanking() {
         return this.playerRepository.find({
             select: ['id', 'rank'],
             order: { rank: 'DESC' },
+        }).then((players) => {
+            if (players.length === 0) {
+                throw new common_1.HttpException({ code: 404, message: 'No players found in ranking' }, common_1.HttpStatus.NOT_FOUND);
+            }
+            return players;
         });
     }
     onModuleInit() {
         this.eventEmitterService
             .getEventEmitter()
-            .on('ranking.update', (updatedPlayer) => {
-            console.log('Mise à jour du classement reçue:', updatedPlayer);
-        });
+            .on('ranking.update', (updatedPlayer) => { });
     }
 };
 exports.RankingService = RankingService;

@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Res, Sse } from '@nestjs/common';
+import { Body, Controller, Post, Res, Sse, HttpException, HttpStatus } from '@nestjs/common';
 import { PlayerService } from './player.service';
 import { Response } from 'express';
 import { CreatePlayerDTO } from './dto/create-player.dto';
@@ -7,47 +7,35 @@ import { Player } from '../entities/player.entity';
 import { EventEmitterService } from '../event-emitter/event-emitter.service';
 import { map } from 'rxjs/operators';
 
-
 @Controller()
 export class PlayersController {
   constructor(
-    private readonly PlayersService: PlayerService,
+    private readonly playerService: PlayerService,
     private readonly eventEmitter: EventEmitterService,
   ) {}
 
   @Post('/api/player')
-  setPlayerName(
-    @Body() createPlayerDTO: CreatePlayerDTO,
-    @Res() res: Response,
-  ) {
-    let result;
+  async setPlayerName(@Body() createPlayerDTO: CreatePlayerDTO, @Res() res: Response) {
     try {
-      result = this.PlayersService.setPlayerName(createPlayerDTO);
-    } catch {
-      if (createPlayerDTO.id === '') {
-        return res.status(400).json({
-          code: 0,
-          message: 'No id found',
-        });
+      const result = await this.playerService.setPlayerName(createPlayerDTO);
+      return res.status(200).json(result);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json(error.getResponse());
       }
-      return res.status(409).json({
-        code: 0,
-        message: 'Player already exists',
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        code: 500,
+        message: 'Internal server error',
       });
     }
-    return res.status(201).json(result);
   }
+
   @Sse('api/ranking/events')
   getRankingEvents() {
-    return fromEvent(this.eventEmitter.getEventEmitter(), 'rankingUpdate').pipe(
-      map((player: Player) => {
-        return <MessageEvent>{
-          data: {
-            type: 'RankingUpdate',
-            player: player,
-          },
-        };
-      }),
+    return fromEvent(this.eventEmitter.getEventEmitter(), 'ranking.update').pipe(
+      map((player: Player) => ({
+        data: { type: 'RankingUpdate', player },
+      })),
     );
   }
 }

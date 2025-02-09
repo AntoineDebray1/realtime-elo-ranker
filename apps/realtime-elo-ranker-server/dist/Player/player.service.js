@@ -24,21 +24,32 @@ let PlayerService = class PlayerService {
         this.eventEmitterService = eventEmitterService;
     }
     setPlayerName(createPlayerDTO) {
+        if (!createPlayerDTO.id || createPlayerDTO.id.trim() === '') {
+            return Promise.reject(new common_1.HttpException({ code: 400, message: 'Player id is required' }, common_1.HttpStatus.BAD_REQUEST));
+        }
         return this.players
-            .findOne({
-            where: { id: createPlayerDTO.id },
-        })
+            .findOne({ where: { id: createPlayerDTO.id } })
             .then((existingPlayer) => {
             if (existingPlayer) {
-                throw new Error('Player already exists');
+                throw new common_1.HttpException({ code: 409, message: 'Player already exists' }, common_1.HttpStatus.CONFLICT);
             }
-            if (!createPlayerDTO.id || createPlayerDTO.id.trim() === '') {
-                throw new Error('Player id is required');
-            }
+            return this.calculateAverageRank();
+        })
+            .then((averageRank) => {
             const newPlayer = this.players.create(createPlayerDTO);
-            newPlayer.rank = createPlayerDTO.rank ?? 1000;
-            this.eventEmitterService.emit('ranking.update', newPlayer);
+            newPlayer.rank = createPlayerDTO.rank ?? averageRank;
             return this.players.save(newPlayer);
+        })
+            .then((savedPlayer) => {
+            this.eventEmitterService.emit('ranking.update', savedPlayer);
+            return savedPlayer;
+        });
+    }
+    calculateAverageRank() {
+        return this.players.find().then((players) => {
+            return players.length === 0
+                ? 1000
+                : Math.round(players.reduce((sum, p) => sum + p.rank, 0) / players.length);
         });
     }
     findAll() {
